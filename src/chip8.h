@@ -10,6 +10,8 @@
 #define MEMORY_SIZE 4096
 #define FONTSET_SIZE 80
 
+#define FLAG_REGISTER 0xF
+
 #define FONTSET_START_ADDR 0x50
 #define ROM_START_ADDR 0x200
 
