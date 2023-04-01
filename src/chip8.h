@@ -6,9 +6,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define SCREEN_SIZE 64 * 32
+#define SCREEN_WIDTH 64
+#define SCREEN_HEIGHT 32
+#define SCREEN_SIZE SCREEN_WIDTH*SCREEN_HEIGHT
 #define MEMORY_SIZE 4096
 #define FONTSET_SIZE 80
+#define OPCODE_TABLE_SIZE 0xFFFF
 
 #define FLAG_REGISTER 0xF
 
@@ -16,6 +19,9 @@
 #define ROM_START_ADDR 0x200
 
 const uint8_t fontset[FONTSET_SIZE];
+
+typedef void (*InstructionPointer)(void);
+InstructionPointer opcode_table[OPCODE_TABLE_SIZE];
 
 struct Chip8 {
     uint8_t registers[16];

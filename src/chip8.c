@@ -52,6 +52,12 @@ void initialise() {
     for (int i = 0; i < FONTSET_SIZE; i++) {
         state.memory[FONTSET_START_ADDR + i] = fontset[i];
     }
+
+    // Init opcode table
+    for (int i = 0; i < OPCODE_TABLE_SIZE; i++) {
+        opcode_table[i] = &OP_NULL;
+    }
+
 }
 
 void loadROM(const char *filename) {
@@ -256,7 +262,149 @@ void OP_ANNN() {
 }
 
 void OP_BNNN() {
-    
+    uint16_t addr = state.opcode & 0x0FFF; // Calc dest addr
+    state.pc = addr + state.registers[0]; // Set PC to dest addr + offset
 }
 
+void OP_CXKK() {
+    uint8_t vx = (state.opcode & 0x0F00) >> 8; // Get register number
+    uint8_t byte = state.opcode & 0x00FF; // Get literal byte
 
+    state.registers[vx] = random() & byte; // Set register random byte AND literal byte
+}
+
+void OP_DXYN() {
+    uint8_t vx = (state.opcode & 0x0F00) >> 8;
+    uint8_t vy = (state.opcode & 0x00F0) >> 4;
+
+    uint8_t height = state.opcode & 0x000F;
+
+    uint8_t x_pos = state.registers[vx] % SCREEN_WIDTH;
+    uint8_t y_pos = state.registers[vy] % SCREEN_HEIGHT;
+
+    state.registers[FLAG_REGISTER] = 0;
+
+    for (unsigned int row = 0; row < height; row++) {
+        uint8_t spriteByte = state.memory[state.index + row];
+
+        for (unsigned int col = 0; col < 8; col++) {
+            uint8_t spritePixel = spriteByte & (0x80 >> col);
+            uint32_t *screenPixel = &state.display[(y_pos + row) * SCREEN_WIDTH + (x_pos + col)];
+
+            if (spritePixel) {
+                if (*screenPixel == 0xFFFFFFFF) state.registers[FLAG_REGISTER] = 1;
+                *screenPixel ^= 0xFFFFFFFF;
+            }
+        }
+    }
+}
+
+void OP_EX9E() {
+    uint8_t vx = (state.opcode & 0x0F00) >> 8;
+    uint8_t key = state.registers[vx];
+
+    if (state.keypad[key]) state.pc += 2;
+}
+
+void OP_EXA1() {
+    uint8_t vx = (state.opcode & 0x0F00) >> 8;
+    uint8_t key = state.registers[vx];
+
+    if (!state.keypad[key]) state.pc += 2;
+}
+
+void OP_FX07() {
+    uint8_t vx = (state.opcode & 0x0F00) >> 8;
+
+    state.registers[vx] = state.delay_timer;
+}
+
+void OP_FX0A() {
+    uint8_t vx = (state.opcode & 0x0F00) >> 8;
+
+    if (state.keypad[0x0]) {
+        state.registers[vx] = 0x0;
+    } else if (state.keypad[0x1]) {
+        state.registers[vx] = 0x1;
+    } else if (state.keypad[0x2]) {
+        state.registers[vx] = 0x2;
+    } else if (state.keypad[0x3]) {
+        state.registers[vx] = 0x3;
+    } else if (state.keypad[0x4]) {
+        state.registers[vx] = 0x4;
+    } else if (state.keypad[0x5]) {
+        state.registers[vx] = 0x5;
+    } else if (state.keypad[0x6]) {
+        state.registers[vx] = 0x6;
+    } else if (state.keypad[0x7]) {
+        state.registers[vx] = 0x7;
+    } else if (state.keypad[0x8]) {
+        state.registers[vx] = 0x8;
+    } else if (state.keypad[0x9]) {
+        state.registers[vx] = 0x9;
+    } else if (state.keypad[0xA]) {
+        state.registers[vx] = 0xA;
+    } else if (state.keypad[0xB]) {
+        state.registers[vx] = 0xB;
+    } else if (state.keypad[0xC]) {
+        state.registers[vx] = 0xC;
+    } else if (state.keypad[0xD]) {
+        state.registers[vx] = 0xD;
+    } else if (state.keypad[0xE]) {
+        state.registers[vx] = 0xE;
+    } else if (state.keypad[0xF]) {
+        state.registers[vx] = 0xF;
+    } else {
+        state.pc -= 2;
+    }
+}
+
+void OP_FX15() {
+    uint8_t vx = (state.opcode & 0x0F00) >> 8;
+
+    state.delay_timer = state.registers[vx];
+}
+
+void OP_FX18() {
+    uint8_t vx = (state.opcode & 0x0F00) >> 8;
+
+    state.sound_timer = state.registers[vx];
+}
+
+void OP_FX1E() {
+    uint8_t vx = (state.opcode & 0x0F00) >> 8;
+
+    state.index = state.registers[vx];
+}
+
+void OP_FX29() {
+    uint8_t vx = (state.opcode & 0x0F00) >> 8;
+    uint8_t digit = state.registers[vx];
+
+    state.index = FONTSET_START_ADDR + (digit * 5);
+}
+
+void OP_FX33() {
+    uint8_t vx = (state.opcode & 0x0F00) >> 8;
+    uint8_t value = state.registers[vx];
+
+    state.memory[state.index + 2] = value % 10;
+    value /= 10;
+
+    state.memory[state.index + 1] = value % 10;
+    value /= 10;
+
+    state.memory[state.index] = value % 10;
+}
+
+void OP_FX55() {
+    uint8_t vx = (state.opcode & 0x0F00) >> 8;
+
+    for (uint8_t i = 0; i <= vx; i++) state.memory[state.index + i] = state.registers[i];
+}
+
+void OP_FX65() {
+    uint8_t vx = (state.opcode & 0x0F00) >> 8;
+
+    for (uint8_t i = 0; i <= vx; i++) state.registers[i] = state.memory[state.index + i];
+}
