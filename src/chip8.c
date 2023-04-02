@@ -203,7 +203,6 @@ void cycle() {
 
                 default:
                     instruction = &OP_NULL;
-                    break;
             }
 
         case 0xF:
@@ -246,7 +245,6 @@ void cycle() {
 
                 default:
                     instruction = &OP_NULL;
-                    break;
             }
 
         default:
