@@ -52,12 +52,6 @@ void initialise() {
     for (int i = 0; i < FONTSET_SIZE; i++) {
         state.memory[FONTSET_START_ADDR + i] = fontset[i];
     }
-
-    // Init opcode table
-    for (int i = 0; i < OPCODE_TABLE_SIZE; i++) {
-        opcode_table[i] = &OP_NULL;
-    }
-
 }
 
 void loadROM(const char *filename) {
@@ -83,7 +77,188 @@ void loadROM(const char *filename) {
 }
 
 void cycle() {
-    // TODO
+    // Fetch
+    state.opcode = (state.memory[state.pc] << 8) | state.memory[state.pc + 1];
+
+    // Increment PC
+    state.pc += 2;
+
+    // Decode
+    void (*instruction)(void);
+
+    switch ((state.opcode & 0xF000) >> 12) {
+        case 0x0:
+            switch (state.opcode & 0xF) {
+                case 0x0:
+                    instruction = &OP_00E0;
+                    break;
+
+                case 0xE:
+                    instruction = &OP_00EE;
+                    break;
+
+                default:
+                    instruction = &OP_NULL;
+            }
+
+        case 0x1:
+            instruction = &OP_1NNN;
+            break;
+
+        case 0x2:
+            instruction = &OP_2NNN;
+            break;
+
+        case 0x3:
+            instruction = &OP_3XKK;
+            break;
+
+        case 0x4:
+            instruction = &OP_4XKK;
+            break;
+
+        case 0x5:
+            instruction = &OP_5XY0;
+            break;
+
+        case 0x6: 
+            instruction = &OP_6XKK;
+            break;
+
+        case 0x7:
+            instruction = &OP_7XKK;
+            break;
+
+        case 0x8:
+            switch (state.opcode & 0xF) {
+                case 0x0:
+                    instruction = &OP_8XY0;
+                    break;
+
+                case 0x1:
+                    instruction = &OP_8XY1;
+                    break;
+
+                case 0x2:
+                    instruction = &OP_8XY2;
+                    break;
+
+                case 0x3:
+                    instruction = &OP_8XY3;
+                    break;
+
+                case 0x4:
+                    instruction = &OP_8XY4;
+                    break;
+
+                case 0x5:
+                    instruction = &OP_8XY5;
+                    break;
+
+                case 0x6:
+                    instruction = &OP_8XY6;
+                    break;
+
+                case 0x7:
+                    instruction = &OP_8XY7;
+                    break;
+
+                case 0xE:
+                    instruction = &OP_8XYE;
+                    break;
+
+                default:
+                    instruction = &OP_NULL;
+            }
+
+        case 0x9:
+            instruction = &OP_9XY0;
+            break;
+
+        case 0xA:
+            instruction = &OP_ANNN;
+            break;
+
+        case 0xB:
+            instruction = &OP_BNNN;
+            break;
+
+        case 0xC:
+            instruction = &OP_CXKK;
+            break;
+
+        case 0xD:
+            instruction = &OP_DXYN;
+            break;
+
+        case 0xE:
+            switch (state.opcode & 0xFF) {
+                case 0x9E:
+                    instruction = &OP_EX9E;
+                    break;
+
+                case 0xA1:
+                    instruction = &OP_EXA1;
+                    break;
+
+                default:
+                    instruction = &OP_NULL;
+                    break;
+            }
+
+        case 0xF:
+            switch (state.opcode & 0xFF) {
+                case 0x07:
+                    instruction = &OP_FX07;
+                    break;
+
+                case 0x0A:
+                    instruction = &OP_FX0A;
+                    break;
+
+                case 0x15:
+                    instruction = &OP_FX15;
+                    break;
+
+                case 0x18:
+                    instruction = &OP_FX18;
+                    break;
+
+                case 0x1E:
+                    instruction = &OP_FX1E;
+                    break;
+
+                case 0x29:
+                    instruction = &OP_FX29;
+                    break;
+
+                case 0x33:
+                    instruction = &OP_FX33;
+                    break;
+
+                case 0x55:
+                    instruction = &OP_FX55;
+                    break;
+
+                case 0x65:
+                    instruction = &OP_FX65;
+                    break;
+
+                default:
+                    instruction = &OP_NULL;
+                    break;
+            }
+
+        default:
+            instruction = &OP_NULL;
+    }
+
+    // Execute
+    instruction();
+
+    // Decrement timers
+    if (state.delay_timer > 0) state.delay_timer--;
+    if (state.sound_timer > 0) state.sound_timer--;
 }
 
 // 

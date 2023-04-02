@@ -11,7 +11,6 @@
 #define SCREEN_SIZE SCREEN_WIDTH*SCREEN_HEIGHT
 #define MEMORY_SIZE 4096
 #define FONTSET_SIZE 80
-#define OPCODE_TABLE_SIZE 0xFFFF
 
 #define FLAG_REGISTER 0xF
 
@@ -19,9 +18,6 @@
 #define ROM_START_ADDR 0x200
 
 const uint8_t fontset[FONTSET_SIZE];
-
-typedef void (*InstructionPointer)(void);
-InstructionPointer opcode_table[OPCODE_TABLE_SIZE];
 
 struct Chip8 {
     uint8_t registers[16];
@@ -44,6 +40,8 @@ void error(const char *message, bool fatal);
 int random();
 
 void initialise();
+void cleanup();
+
 void loadROM(const char *filename);
 void cycle();
 
