@@ -54,7 +54,7 @@ void initialise() {
     }
 }
 
-void loadROM(const char *filename) {
+void load_rom(const char *filename) {
     FILE *fp;
     size_t fs;
 

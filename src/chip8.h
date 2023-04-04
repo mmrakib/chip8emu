@@ -42,7 +42,7 @@ int random();
 void initialise();
 void cleanup();
 
-void loadROM(const char *filename);
+void load_rom(const char *filename);
 void cycle();
 
 // Instructions (named after opcodes)
